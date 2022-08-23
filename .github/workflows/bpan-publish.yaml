@@ -1,0 +1,30 @@
+on:
+  issue_comment:
+    type: created
+
+  # repository_dispatch:
+  #   types: bpan-publish
+
+env:
+  bpan_publish_debug: true
+
+  github_json: ${{ toJson(github) }}
+
+jobs:
+  bpan-publish:
+    if: github.event.issue.number == 1
+
+    runs-on: ubuntu-22.04
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - id: jobid
+      uses: tiryoh/gha-jobid-action@v0
+      with:
+        job_name: bpan-publish
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+
+    - uses: bpan-org/bpan-plugin-publish-gha@main
+      env:
+        gha_job_html_url: ${{ steps.jobid.outputs.html_url }}
