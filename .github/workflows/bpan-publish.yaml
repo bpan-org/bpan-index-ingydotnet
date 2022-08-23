@@ -1,0 +1,43 @@
+# This GHA workflow is responsible for publishing a BPAN package to a BPAN
+# index repository.
+# It is triggered by a special comment to a particular GitHub Issue on the
+# repository.
+
+on:
+  issue_comment:
+    type: created
+
+  # Maybe use repository_dispatch trigger:
+  # repository_dispatch:
+  #   types: bpan-publish
+  #   note: |
+  #     curl \
+  #       --request POST \
+  #       --header "Authorization: token <your-token-here>" \
+  #       --data '{"event_type": "bpan-publish", "client_payload": { "text": "a title"}}' \
+  #       https://api.github.com/repos/bpan-org/bpan-index/dispatches
+
+env:
+  bpan_publish_debug: true
+
+  github_json: ${{ toJson(github) }}
+
+jobs:
+  bpan-publish:
+    if: github.event.issue.number == 1
+
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout this BPAN index repo
+      uses: actions/checkout@v3
+
+    - id: jobid
+      uses: tiryoh/gha-jobid-action@v0
+      with:
+        job_name: bpan-publish
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+
+    - uses: bpan-org/bpan-plugin-publish-gha@main
+      env:
+        gha_job_html_url: ${{ steps.jobid.outputs.html_url }}
